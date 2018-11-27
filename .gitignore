@@ -1,0 +1,6 @@
+# etc.
+*.pyc
+__pycache__
+.envrc
+.vscode
+.DS_Code

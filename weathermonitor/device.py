@@ -177,7 +177,9 @@ class TLan08VmHandler(BaseDeviceHandler):
         Return:
             ret (str): Current status
         """
-        ret = self.com.query("get s")
+        ret = self.com.query("get s").strip(
+            self.com.terminator + self.recv_term_char
+        )
         return ret
 
     def _validate_sender(self):

@@ -27,24 +27,6 @@ READ_CYCLE_SEC = MEAS_CYCLE_SEC * NUM_BUFFER
 INIT_ARGS = (CH_BIT, VOLT_RANGE, CH_INTERVAL, MEAS_CYCLE, NUM_RPT)
 
 
-# def buffer_data():
-#     device.start()
-#     while True:
-#         ret = device.get_status()
-#         if ret == "DONE":
-#             break
-#     for ch in MEAS_CHS:
-#         buffer_dict[ch].append(device.read_buffer(ch))
-
-# def insert_to_db(ch):
-#     while True:
-#         if len(buffer_dict[ch]) == NUM_BUFFER:
-#             ret = buffer_dict[ch]
-#             buffer_dict[ch] = []
-#             print(dict(zip(timestamps, ret)))
-#             print(ch, len(ret))
-#             break
-
 def generate_timestamp():
     global timestamps
     timestamps = [
@@ -116,48 +98,3 @@ if __name__ == "__main__":
     stop_flag = None
     while True:
         stop_flag = input()
-
-
-# def update_starttime():
-#     global starttime
-#     starttime = datetime.strptime(timestamps[-1], DATETIME_FORMAT) + \
-#                 timedelta(seconds=MEAS_CYCLE_SEC)
-#     return
-
-# def process_manager(signum, frame):
-#     threads = [
-#         threading.Thread(target=insert_to_db, args=(ch, ))
-#         for ch in MEAS_CHS
-#     ]
-#     generate_timestamp()
-#     update_starttime()
-#     for thread in threads:
-#         thread.start()
-#     # for thread in threads:
-#     #     thread.join()
-
-#     # if stop_flag is not None:
-#     #     device.stop()
-#     #     sys.exit()
-
-
-# if __name__ == "__main__":
-#     com = SocketCom(HOST, PORT)
-#     device = TLan08VmHandler(com)
-
-#     # Setup the measurement
-#     device.initialize(*INIT_ARGS)
-#     buffer_dict = {}
-#     for ch in MEAS_CHS:
-#         buffer_dict[ch] = []
-
-#     # Start the measurement
-#     starttime = datetime.now()
-#     signal.signal(signalnum=signal.SIGALRM, handler=process_manager)
-#     # signal.setitimer(signal.ITIMER_REAL, READ_CYCLE_SEC, READ_CYCLE_SEC)
-#  #
-#     while True:
-#         buffer_data()
-#     # stop_flag = None
-#     # while True:
-#     #     stop_flag = input()

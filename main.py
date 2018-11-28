@@ -56,7 +56,7 @@ def process_manager(signum, frame):
     for thread in threads:
         thread.join()
 
-    if stop_flag is not None:
+    if stop_flag:
         device.stop()
         sys.exit()
     return
@@ -95,6 +95,8 @@ if __name__ == "__main__":
     signal.signal(signalnum=signal.SIGALRM, handler=process_manager)
     signal.setitimer(signal.ITIMER_REAL, READ_CYCLE_SEC, READ_CYCLE_SEC)
 
-    stop_flag = None
-    while True:
-        stop_flag = input()
+    try:
+        while True:
+            pass
+    except KeyboardInterrupt:
+        stop_flag = True

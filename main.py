@@ -96,7 +96,10 @@ if __name__ == "__main__":
     signal.setitimer(signal.ITIMER_REAL, READ_CYCLE_SEC, READ_CYCLE_SEC)
 
     try:
+        stop_flag = False
         while True:
             pass
     except KeyboardInterrupt:
         stop_flag = True
+        while True:
+            pass

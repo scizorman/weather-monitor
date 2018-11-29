@@ -82,8 +82,11 @@ def insert_to_db(ch):
 
 
 if __name__ == "__main__":
+    # Setting variables which are used by functions in this script
     com = SocketCom(HOST, PORT)
     device = TLan08VmHandler(com)
+    starttime = None
+    stop_flag = False
 
     # Setup "TLAN-08VM"
     device.initialize(*INIT_ARGS)
@@ -96,7 +99,6 @@ if __name__ == "__main__":
     signal.setitimer(signal.ITIMER_REAL, READ_CYCLE_SEC, READ_CYCLE_SEC)
 
     try:
-        stop_flag = False
         while True:
             pass
     except KeyboardInterrupt:

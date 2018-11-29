@@ -17,6 +17,7 @@ CH_BIT = int(os.environ["CH_BIT"])
 VOLT_RANGE = int(os.environ["VOLT_RANGE"])
 MEAS_CYCLE = int(os.environ["MEAS_CYCLE"])
 CH_INTERVAL = int(os.environ["CH_INTERVAL"])
+CH_KEYS = ("wind_spd", "wind_dir")
 MEAS_CYCLE_SEC = MEAS_CYCLE * 0.1
 NUM_CH = 8
 NUM_RPT = 0
@@ -44,11 +45,27 @@ def update_starttime():
                 timedelta(seconds=MEAS_CYCLE_SEC)
     return
 
+def format_data(buffer_lst):
+    fields_lst = [dict(zip(CH_KEYS, buffer)) for buffer in buffer_lst]
+    formated_lst = []
+    for timestamp, fields, in zip(timestamps, fields_lst):
+        data_dict = {
+            "timestamp": timestamp,
+            "fields": fields,
+        }
+        formated_lst.append(data_dict)
+    return formated_lst
+
+
 def process_manager(signum, frame):
     with ThreadPoolExecutor(max_workers=NUM_CH) as executor:
-        futures = [executor.submit(insert_to_db, ch) for ch in MEAS_CHS]
+        futures = [executor.submit(device.read_buffer, ch) for ch in MEAS_CHS]
     generate_timestamp()
     update_starttime()
+
+    buffer_lst = list(zip(*(f.result() for f in futures)))
+    formated_lst = format_data(buffer_lst)
+    print(formated_lst)
 
     if stop_flag:
         device.stop()

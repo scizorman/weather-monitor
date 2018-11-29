@@ -72,25 +72,6 @@ def process_manager(signum, frame):
         sys.exit()
     return
 
-def create_data_dict(ch):
-    """
-    """
-    data_lst = device.read_buffer(ch)
-    # if len(data_lst) != NUM_BUFFER:
-    #     global stop_flag
-    #     stop_flag = "wahhoi"
-    #     raise AssertionError("wahhoi")
-    data_dict = dict(zip(timestamps, data_lst))
-    return data_dict
-
-# NOTE: Temporary
-def insert_to_db(ch):
-    """
-    """
-    data_dict = create_data_dict(ch)
-    print(data_dict)
-    print(ch, len(data_dict.keys()))
-
 
 if __name__ == "__main__":
     # Setting variables which are used by functions in this script

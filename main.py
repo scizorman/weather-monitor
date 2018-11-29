@@ -4,8 +4,8 @@ import os
 import sys
 import time
 import signal
-import threading
 from datetime import datetime, timedelta
+from concurrent.futures import ThreadPoolExecutor
 from weathermonitor.communicator import SocketCom
 from weathermonitor.device import TLan08VmHandler
 from weathermonitor.utils import extract_bits
@@ -45,16 +45,10 @@ def update_starttime():
     return
 
 def process_manager(signum, frame):
-    threads = [
-        threading.Thread(target=insert_to_db, args=(ch, ))
-        for ch in MEAS_CHS
-    ]
+    with ThreadPoolExecutor(max_workers=NUM_CH) as executor:
+        futures = [executor.submit(insert_to_db, ch) for ch in MEAS_CHS]
     generate_timestamp()
     update_starttime()
-    for thread in threads:
-        thread.start()
-    for thread in threads:
-        thread.join()
 
     if stop_flag:
         device.stop()

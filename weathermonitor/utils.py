@@ -1,7 +1,25 @@
 # coding: utf-8
 __all__ = [
+    "or_of_bits",
     "extract_bits",
 ]
+
+
+def or_of_bits(*bits):
+    """OR the given bits.
+    Args:
+        *bits (int): Bits for OR. More than one argument required.
+    Return:
+        or_bit (int): OR of the given bits.
+    Example:
+        >>> or_of_bits(1, 2, 4)
+        21 # 0b10101, 0x15
+    """
+    or_bit = 0
+    for bit in bits:
+        or_bit |= 2 ** bit
+
+    return or_bit
 
 
 def extract_bits(bit, num_ch):

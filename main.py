@@ -94,6 +94,12 @@ if __name__ == "__main__":
     starttime = None
     stop_flag = False
 
+    # Setup InfluxDB
+    dbs = client.get_list_database()
+    weathermonitor_db = {"name": "WeatherMonitor"}
+    if weathermonitor_db not in dbs:
+        client.create_database(weathermonitor_db["name"])
+
     # Setup "TLAN-08VM"
     device.initialize(*INIT_ARGS)
 

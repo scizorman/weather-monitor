@@ -6,11 +6,21 @@ import time
 import signal
 from datetime import datetime, timedelta
 from concurrent.futures import ThreadPoolExecutor
+from influxdb import InfluxDBClient
 from weathermonitor.communicator import SocketCom
 from weathermonitor.device import TLan08VmHandler
 from weathermonitor.utils import extract_bits
 
 
+# Constants for Database
+DB_HOST = "localhost"
+DB_PORT = 8086
+DB_USER = "root"
+DB_PASSWORD = "root"
+DB_TABLE = "WeatherMonitor"
+DB_MEASUREMENT = "Aerovane"
+
+# Constants for ADC
 HOST = os.environ["HOST"]
 PORT = int(os.environ["PORT"])
 CH_BIT = int(os.environ["CH_BIT"])
@@ -50,8 +60,9 @@ def format_data(buffer_lst):
     formated_lst = []
     for timestamp, fields, in zip(timestamps, fields_lst):
         data_dict = {
-            "timestamp": timestamp,
+            "time": timestamp,
             "fields": fields,
+            "measurement": DB_MEASUREMENT,
         }
         formated_lst.append(data_dict)
     return formated_lst
@@ -65,7 +76,9 @@ def process_manager(signum, frame):
 
     buffer_lst = list(zip(*(f.result() for f in futures)))
     formated_lst = format_data(buffer_lst)
-    print(formated_lst)
+
+    for json_body in formated_lst:
+        client.write_points(json_body)
 
     if stop_flag:
         device.stop()
@@ -75,6 +88,7 @@ def process_manager(signum, frame):
 
 if __name__ == "__main__":
     # Setting variables which are used by functions in this script
+    client = InfluxDBClient(DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_TABLE)
     com = SocketCom(HOST, PORT)
     device = TLan08VmHandler(com)
     starttime = None

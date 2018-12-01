@@ -75,10 +75,9 @@ def process_manager(signum, frame):
     update_starttime()
 
     buffer_lst = list(zip(*(f.result() for f in futures)))
-    formated_lst = format_data(buffer_lst)
+    json_body = format_data(buffer_lst)
 
-    for json_body in formated_lst:
-        client.write_points(json_body)
+    client.write_points(json_body)
 
     if stop_flag:
         device.stop()

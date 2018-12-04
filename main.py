@@ -4,38 +4,50 @@ import os
 import sys
 import time
 import signal
+import yaml
 from datetime import datetime, timedelta
 from concurrent.futures import ThreadPoolExecutor
 from influxdb import InfluxDBClient
 from weathermonitor.communicator import SocketCom
 from weathermonitor.device import TLan08VmHandler
-from weathermonitor.utils import extract_bits
+from weathermonitor.utils import or_of_bits
 
 
-# Constants for Database
-DB_HOST = "localhost"
-DB_PORT = 8086
-DB_USER = "root"
-DB_PASSWORD = "root"
-DB_TABLE = "WeatherMonitor"
-DB_MEASUREMENT = "Aerovane"
+DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S.%f"
 
 # Constants for ADC
-HOST = os.environ["HOST"]
-PORT = int(os.environ["PORT"])
-CH_BIT = int(os.environ["CH_BIT"])
-VOLT_RANGE = int(os.environ["VOLT_RANGE"])
-MEAS_CYCLE = int(os.environ["MEAS_CYCLE"])
-CH_INTERVAL = int(os.environ["CH_INTERVAL"])
-CH_KEYS = ("wind_spd", "wind_dir")
-MEAS_CYCLE_SEC = MEAS_CYCLE * 0.1
-NUM_CH = 8
-NUM_RPT = 0
-NUM_BUFFER = 10
-DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S.%f"
-MEAS_CHS = extract_bits(CH_BIT, NUM_CH)
-READ_CYCLE_SEC = MEAS_CYCLE_SEC * NUM_BUFFER
-INIT_ARGS = (CH_BIT, VOLT_RANGE, CH_INTERVAL, MEAS_CYCLE, NUM_RPT)
+DEVICE_CONFIG_PATH = "./device_config.yaml"
+HOST = os.environ["DEVICE_HOST"]
+PORT = int(os.environ["DEVICE_PORT"])
+
+with open(DEVICE_CONFIG_PATH) as f:
+    device_conf_dict = yaml.load(f)
+
+    CH_ROLE_DICT     = device_conf_dict["ch_role"]
+    CONV_FACTOR_DICT = device_conf_dict["conv_factor"]
+    VOLT_RANGE_DICT  = device_conf_dict["volt_range"]
+    MEAS_CH_LIST     = device_conf_dict["meas_chs"]
+    MEAS_CYCLE_SEC   = device_conf_dict["meas_cycle_sec"]
+    NUM_BUFFER       = device_conf_dict["num_buffer"]
+    NUM_RPT          = device_conf_dict["num_rpt"]
+
+    CH_BIT = or_of_bits(*MEAS_CH_LIST)
+    CH_INTERVAL = device_conf_dict["ch_interval_sec"] * 10 # Unit: 100 ms
+    MEAS_CYCLE = MEAS_CYCLE_SEC * 10                       # Unit: 100 ms
+    NUM_CH = len(MEAS_CH_LIST)
+    READ_CYCLE_SEC = MEAS_CYCLE_SEC * NUM_BUFFER
+
+    INIT_ARGS = (CH_BIT, VOLT_RANGE_DICT, CH_INTERVAL, MEAS_CYCLE, NUM_RPT)
+
+    del(device_conf_dict)
+
+# Constants for Database
+DB_HOST        = os.environ["DB_HOST"]
+DB_PORT        = int(os.environ["DB_PORT"])
+DB_USERNAME    = os.environ["DB_USERNAME"]
+DB_PASSWORD    = os.environ["DB_PASSWORD"]
+DB_TABLENAME   = os.environ["DB_TABLENAME"]
+DB_MEASUREMENT = os.environ["DB_MEASUREMENT"]
 
 
 def generate_timestamp():
@@ -70,7 +82,10 @@ def format_data(buffer_lst):
 
 def process_manager(signum, frame):
     with ThreadPoolExecutor(max_workers=NUM_CH) as executor:
-        futures = [executor.submit(device.read_buffer, ch) for ch in MEAS_CHS]
+        futures = [
+            executor.submit(device.read_buffer, ch)
+            for ch in MEAS_CH_LIST
+        ]
     generate_timestamp()
     update_starttime()
 
@@ -87,7 +102,13 @@ def process_manager(signum, frame):
 
 if __name__ == "__main__":
     # Setting variables which are used by functions in this script
-    client = InfluxDBClient(DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_TABLE)
+    client = InfluxDBClient(
+        DB_HOST,
+        DB_PORT,
+        DB_USERNAME,
+        DB_PASSWORD,
+        DB_TABLENAME,
+    )
     com = SocketCom(HOST, PORT)
     device = TLan08VmHandler(com)
     starttime = None

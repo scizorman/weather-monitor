@@ -71,17 +71,20 @@ def convert_data(buffer, conv_factor):
     conv_buffer = list(map(lambda x: x * conv_factor, buffer))
     return conv_buffer
 
-def format_data(buffer_lst):
-    fields_lst = [dict(zip(CH_KEYS, buffer)) for buffer in buffer_lst]
-    formated_lst = []
+def create_jsonbody(buffer_lst):
+    fields_lst = [
+        dict(zip(val, buffer))
+        for val, buffer in zip(CH_ROLE_DICT.values(), buffer_lst)
+    ]
+    jsonbody_lst = []
     for timestamp, fields, in zip(timestamps, fields_lst):
-        data_dict = {
+        jsonbody = {
             "time": timestamp,
             "fields": fields,
             "measurement": DB_MEASUREMENT,
         }
-        formated_lst.append(data_dict)
-    return formated_lst
+        jsonbody_lst.append(jsonbody)
+    return jsonbody_lst
 
 
 def process_manager(signum, frame):
@@ -94,7 +97,7 @@ def process_manager(signum, frame):
     update_starttime()
 
     buffer_lst = list(zip(*(f.result() for f in futures)))
-    json_body = format_data(buffer_lst)
+    json_body = create_jsonbody(buffer_lst)
 
     client.write_points(json_body)
 

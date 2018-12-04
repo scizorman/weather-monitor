@@ -72,11 +72,9 @@ def convert_buffer(buffer, conv_factor):
     return conv_buffer
 
 def create_jsonbody(buffer_lst):
-    print(list(CH_ROLE_DICT.values()))
-    print(buffer_lst)
     fields_lst = [
-        dict(zip(val, buffer))
-        for val, buffer in zip(CH_ROLE_DICT.values(), buffer_lst)
+        dict(zip(CH_ROLE_DICT.values(), buffer))
+        for buffer in buffer_lst
     ]
     jsonbody_lst = []
     for timestamp, fields, in zip(timestamps, fields_lst):

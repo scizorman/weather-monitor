@@ -16,7 +16,7 @@ from weathermonitor.utils import or_of_bits
 DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S.%f"
 
 # Constants for ADC
-DEVICE_CONFIG_PATH = "./device_config.yaml"
+DEVICE_CONFIG_PATH = "./device-config.yaml"
 HOST = os.environ["DEVICE_HOST"]
 PORT = int(os.environ["DEVICE_PORT"])
 

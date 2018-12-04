@@ -32,8 +32,8 @@ with open(DEVICE_CONFIG_PATH) as f:
     NUM_RPT          = device_conf_dict["num_rpt"]
 
     CH_BIT = or_of_bits(*MEAS_CH_LIST)
-    CH_INTERVAL = device_conf_dict["ch_interval_sec"] * 10 # Unit: 100 ms
-    MEAS_CYCLE = MEAS_CYCLE_SEC * 10                       # Unit: 100 ms
+    CH_INTERVAL = int(device_conf_dict["ch_interval_sec"] * 10) # Unit: 100 ms
+    MEAS_CYCLE = int(MEAS_CYCLE_SEC * 10)                       # Unit: 100 ms
     NUM_CH = len(MEAS_CH_LIST)
     READ_CYCLE_SEC = MEAS_CYCLE_SEC * NUM_BUFFER
 
@@ -72,6 +72,8 @@ def convert_buffer(buffer, conv_factor):
     return conv_buffer
 
 def create_jsonbody(buffer_lst):
+    print(list(CH_ROLE_DICT.values()))
+    print(buffer_lst)
     fields_lst = [
         dict(zip(val, buffer))
         for val, buffer in zip(CH_ROLE_DICT.values(), buffer_lst)

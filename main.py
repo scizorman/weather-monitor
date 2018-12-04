@@ -67,7 +67,7 @@ def update_starttime():
                 timedelta(seconds=MEAS_CYCLE_SEC)
     return
 
-def convert_data(buffer, conv_factor):
+def convert_buffer(buffer, conv_factor):
     conv_buffer = list(map(lambda x: x * conv_factor, buffer))
     return conv_buffer
 
@@ -96,7 +96,11 @@ def process_manager(signum, frame):
     generate_timestamp()
     update_starttime()
 
-    buffer_lst = list(zip(*(f.result() for f in futures)))
+    conv_buffer = [
+        convert_buffer(future.result(), factor)
+        for future, factor in zip(futures, CONV_FACTOR_DICT.values())
+    ]
+    buffer_lst = list(zip(*(buffer for buffer in conv_buffer)))
     json_body = create_jsonbody(buffer_lst)
 
     client.write_points(json_body)

@@ -137,7 +137,7 @@ if __name__ == "__main__":
     # Start measurement
     device.start()
     time.sleep(MEAS_CYCLE_SEC / 2)
-    starttime = datetime.now()
+    starttime = datetime.utcnow()
     signal.signal(signalnum=signal.SIGALRM, handler=process_manager)
     signal.setitimer(signal.ITIMER_REAL, READ_CYCLE_SEC, READ_CYCLE_SEC)
 

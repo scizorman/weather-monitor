@@ -12,7 +12,6 @@ from weathermonitor.communicator import SocketCom
 from weathermonitor.device import TLan08VmHandler
 from weathermonitor.utils import or_of_bits
 
-
 DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S.%f"
 
 # Constants for ADC
@@ -23,30 +22,30 @@ PORT = int(os.environ["DEVICE_PORT"])
 with open(DEVICE_CONFIG_PATH) as f:
     device_conf_dict = yaml.load(f)
 
-    CH_ROLE_DICT     = device_conf_dict["ch_role"]
+    CH_ROLE_DICT = device_conf_dict["ch_role"]
     CONV_FACTOR_DICT = device_conf_dict["conv_factor"]
-    VOLT_RANGE_DICT  = device_conf_dict["volt_range"]
-    MEAS_CH_LIST     = device_conf_dict["meas_chs"]
-    MEAS_CYCLE_SEC   = device_conf_dict["meas_cycle_sec"]
-    NUM_BUFFER       = device_conf_dict["num_buffer"]
-    NUM_RPT          = device_conf_dict["num_rpt"]
+    VOLT_RANGE_DICT = device_conf_dict["volt_range"]
+    MEAS_CH_LIST = device_conf_dict["meas_chs"]
+    MEAS_CYCLE_SEC = device_conf_dict["meas_cycle_sec"]
+    NUM_BUFFER = device_conf_dict["num_buffer"]
+    NUM_RPT = device_conf_dict["num_rpt"]
 
     CH_BIT = or_of_bits(*MEAS_CH_LIST)
-    CH_INTERVAL = int(device_conf_dict["ch_interval_sec"] * 10) # Unit: 100 ms
-    MEAS_CYCLE = int(MEAS_CYCLE_SEC * 10)                       # Unit: 100 ms
+    CH_INTERVAL = int(device_conf_dict["ch_interval_sec"] * 10)  # Unit: 100 ms
+    MEAS_CYCLE = int(MEAS_CYCLE_SEC * 10)  # Unit: 100 ms
     NUM_CH = len(MEAS_CH_LIST)
     READ_CYCLE_SEC = MEAS_CYCLE_SEC * NUM_BUFFER
 
     INIT_ARGS = (CH_BIT, VOLT_RANGE_DICT, CH_INTERVAL, MEAS_CYCLE, NUM_RPT)
 
-    del(device_conf_dict)
+    del (device_conf_dict)
 
 # Constants for Database
-DB_HOST        = os.environ["DB_HOST"]
-DB_PORT        = int(os.environ["DB_PORT"])
-DB_USERNAME    = os.environ["DB_USERNAME"]
-DB_PASSWORD    = os.environ["DB_PASSWORD"]
-DB_TABLENAME   = os.environ["DB_TABLENAME"]
+DB_HOST = os.environ["DB_HOST"]
+DB_PORT = int(os.environ["DB_PORT"])
+DB_USERNAME = os.environ["DB_USERNAME"]
+DB_PASSWORD = os.environ["DB_PASSWORD"]
+DB_TABLENAME = os.environ["DB_TABLENAME"]
 DB_MEASUREMENT = os.environ["DB_MEASUREMENT"]
 
 
@@ -56,10 +55,10 @@ def generate_timestamp():
         datetime.strftime(
             starttime + timedelta(seconds=MEAS_CYCLE_SEC * i),
             DATETIME_FORMAT,
-        )
-        for i in range(NUM_BUFFER)
+        ) for i in range(NUM_BUFFER)
     ]
     return
+
 
 def update_starttime():
     global starttime
@@ -67,14 +66,15 @@ def update_starttime():
                 timedelta(seconds=MEAS_CYCLE_SEC)
     return
 
+
 def convert_buffer(buffer, conv_factor):
     conv_buffer = list(map(lambda x: x * conv_factor, buffer))
     return conv_buffer
 
+
 def create_jsonbody(buffer_lst):
     fields_lst = [
-        dict(zip(CH_ROLE_DICT.values(), buffer))
-        for buffer in buffer_lst
+        dict(zip(CH_ROLE_DICT.values(), buffer)) for buffer in buffer_lst
     ]
     jsonbody_lst = []
     for timestamp, fields, in zip(timestamps, fields_lst):
@@ -88,22 +88,24 @@ def create_jsonbody(buffer_lst):
 
 
 def process_manager(signum, frame):
-    with ThreadPoolExecutor(max_workers=NUM_CH) as executor:
-        futures = [
-            executor.submit(device.read_buffer, ch)
-            for ch in MEAS_CH_LIST
+    try:
+        with ThreadPoolExecutor(max_workers=NUM_CH) as executor:
+            futures = [
+                executor.submit(device.read_buffer, ch) for ch in MEAS_CH_LIST
+            ]
+        generate_timestamp()
+        update_starttime()
+
+        conv_buffer = [
+            convert_buffer(future.result(), factor)
+            for future, factor in zip(futures, CONV_FACTOR_DICT.values())
         ]
-    generate_timestamp()
-    update_starttime()
+        buffer_lst = list(zip(*(buffer for buffer in conv_buffer)))
+        json_body = create_jsonbody(buffer_lst)
 
-    conv_buffer = [
-        convert_buffer(future.result(), factor)
-        for future, factor in zip(futures, CONV_FACTOR_DICT.values())
-    ]
-    buffer_lst = list(zip(*(buffer for buffer in conv_buffer)))
-    json_body = create_jsonbody(buffer_lst)
-
-    client.write_points(json_body)
+        client.write_points(json_body)
+    except:
+        device.stop()
 
     if stop_flag:
         device.stop()

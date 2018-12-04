@@ -25,12 +25,10 @@ class TLan08VmHandler(BaseDeviceHandler):
         MANUFACTURER (str): Manufacturer of the device.
         PRODUCT_NAME (str): Name of the device.
         CLASSIFICATION (str): Classification of the device.
-        NUM_CH (int): Number of channels
     """
     MANUFACTURER = "Turtle Industory CO., Ltd."
     PRODUCT_NAME = "TLAN-08VM"
     CLASSIFICATION = "A/D Converter"
-    NUM_CH = 8
 
     def __init__(self, com):
         super().__init__(com)

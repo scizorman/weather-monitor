@@ -41,7 +41,7 @@ class TLan08VmHandler(BaseDeviceHandler):
         if ret != self.recv_term_char:
             raise TLan08VmError(ret)
 
-    def initialize(self, ch_bit, volt_range, ch_interval, meas_cycle, num_rpt):
+    def initialize(self, ch_bit, volt_range_dict, ch_interval, meas_cycle, num_rpt):
         """Execute initial setup of the device.
 
         Args:
@@ -51,8 +51,8 @@ class TLan08VmHandler(BaseDeviceHandler):
             Nonw
         """
         self.set_ch(ch_bit)
-        for ch in extract_bits(ch_bit, self.NUM_CH):
-            self.set_volt_range(ch, volt_range)
+        for key, val in volt_range_dict.items():
+            self.set_volt_range(key, val)
         self.set_ch_interval(ch_interval)
         self.set_meas_cycle(meas_cycle)
         self.set_rep_times(num_rpt)

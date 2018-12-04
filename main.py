@@ -67,6 +67,10 @@ def update_starttime():
                 timedelta(seconds=MEAS_CYCLE_SEC)
     return
 
+def convert_data(buffer, conv_factor):
+    conv_buffer = list(map(lambda x: x * conv_factor, buffer))
+    return conv_buffer
+
 def format_data(buffer_lst):
     fields_lst = [dict(zip(CH_KEYS, buffer)) for buffer in buffer_lst]
     formated_lst = []

@@ -129,7 +129,7 @@ if __name__ == "__main__":
 
     # Setup InfluxDB
     dbs = client.get_list_database()
-    weathermonitor_db = {"name": "WeatherMonitor"}
+    weathermonitor_db = {"name": DB_TABLENAME}
     if weathermonitor_db not in dbs:
         client.create_database(weathermonitor_db["name"])
 
